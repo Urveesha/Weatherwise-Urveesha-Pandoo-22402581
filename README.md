@@ -33,7 +33,7 @@ Therefore, to run the notebook in Colab, please follow these steps below:
 
 1. Go to the desired .ipynb file (e.g., in the WeatherWiseApp folder).
 
-2. Click Download (top right or via the file menu).
+2. Click Download (top right- **download raw file**), or via the file menu.
 
 3. Go to Google Colab and open a new notebook.
 
