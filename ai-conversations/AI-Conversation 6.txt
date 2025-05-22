@@ -1,0 +1,333 @@
+----------------------------------
+Tool: ChatGPT
+Date: 2025-05-22
+----------------------------------
+CONVERSATION 6
+----------------------------------
+Me: Can you help me with the Functions and also go through the three types of testing: doctest, unittest, assert of my code please.
+----------------------------------------------------
+AI:
+Great! Below is the enhanced version of each function with:
+
+📘 A function definition
+
+✅ Three types of testing: doctest, unittest, and assert
+
+🐞 A debug simulation function
+
+Dependencies have been handled above (imports and pip installs)
+
+1. 📘 geocode_location(location: str) -> tuple[float, float]
+def geocode_location(location: str) -> tuple[float, float]:
+    """
+    Geocode a location using OpenStreetMap Nominatim API.
+
+    Args:
+        location (str): The name of the location to geocode.
+
+    Returns:
+        tuple: A tuple containing the latitude and longitude.
+
+    >>> isinstance(geocode_location("Paris"), tuple)
+    True
+    """
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {'q': location, 'format': 'json', 'limit': 1}
+    headers = {'User-Agent': 'weather-colab'}
+    response = requests.get(url, params=params, headers=headers)
+    response.raise_for_status()
+    data = response.json()
+    if not data:
+        raise ValueError(f"❌ Location '{location}' not found.")
+    return float(data[0]['lat']), float(data[0]['lon'])
+✅ unittest + assert + 🐞 debug():
+
+import unittest
+
+class TestGeoCode(unittest.TestCase):
+    def test_known_location(self):
+        lat, lon = geocode_location("Berlin")
+        self.assertTrue(-90 <= lat <= 90 and -180 <= lon <= 180)
+
+# ✅ Run unit test
+unittest.TextTestRunner().run(unittest.TestLoader().loadTestsFromTestCase(TestGeoCode))
+
+# ✅ Assertion Test
+lat, lon = geocode_location("Tokyo")
+assert isinstance(lat, float) and isinstance(lon, float)
+
+# 🐞 Debug Simulation
+def debug_geocode():
+    try:
+        print("Debug: Geocoding 'New York'")
+        print(geocode_location("New York"))
+    except Exception as e:
+        print("❌", e)
+
+debug_geocode()
+2. 📘 fetch_weather(lat: float, lon: float, start_date: str, end_date: str)
+def fetch_weather(lat: float, lon: float, start_date: str, end_date: str) -> Dict[str, Any]:
+    """
+    Fetches weather data from the Open-Meteo API.
+
+    Args:
+        lat (float): Latitude.
+        lon (float): Longitude.
+        start_date (str): ISO date (yyyy-mm-dd).
+        end_date (str): ISO date (yyyy-mm-dd).
+
+    Returns:
+        dict: JSON response with weather data.
+    """
+    url = "https://api.open-meteo.com/v1/forecast"
+    params = {
+        'latitude': lat,
+        'longitude': lon,
+        'daily': 'temperature_2m_max,temperature_2m_min,precipitation_sum',
+        'current_weather': True,
+        'timezone': 'auto',
+        'start_date': start_date,
+        'end_date': end_date
+    }
+    return requests.get(url, params=params).json()
+✅ unittest + assert + 🐞 debug():
+
+class TestFetchWeather(unittest.TestCase):
+    def test_structure(self):
+        today = datetime.date.today()
+        data = fetch_weather(48.8566, 2.3522, today.isoformat(), today.isoformat())
+        self.assertIn("current_weather", data)
+
+unittest.TextTestRunner().run(unittest.TestLoader().loadTestsFromTestCase(TestFetchWeather))
+
+# ✅ Assertion
+today = datetime.date.today().isoformat()
+assert "current_weather" in fetch_weather(51.5074, -0.1278, today, today)
+
+# 🐞 Debug
+def debug_fetch_weather():
+    today = datetime.date.today().isoformat()
+    print(fetch_weather(40.7128, -74.0060, today, today))
+
+debug_fetch_weather()
+3. 📘 _extract_forecast_data(weather_data, keys)
+def _extract_forecast_data(weather_data, keys):
+    """
+    Extract specific keys from forecast.
+
+    Args:
+        weather_data (dict): Weather data.
+        keys (list): Keys to extract from forecast.
+
+    Returns:
+        list: Lists of values for each key.
+    """
+    forecast = weather_data.get('forecast', [])
+    return [[day.get(k, None) for day in forecast] for k in keys]
+✅ doctest:
+
+def test_extract_forecast_data():
+    """
+    >>> data = {'forecast': [{'date': '2024-01-01', 'temp_max': 30}]}
+    >>> _extract_forecast_data(data, ['date', 'temp_max'])
+    [['2024-01-01'], [30]]
+    """
+    pass
+✅ unittest + assert + 🐞 debug():
+
+class TestExtractForecast(unittest.TestCase):
+    def test_extract(self):
+        dummy = {'forecast': [{'date': '2024-01-01', 'temp_max': 25, 'temp_min': 15}]}
+        result = _extract_forecast_data(dummy, ['date', 'temp_max'])
+        self.assertEqual(result, [['2024-01-01'], [25]])
+
+unittest.TextTestRunner().run(unittest.TestLoader().loadTestsFromTestCase(TestExtractForecast))
+
+# ✅ Assertion
+dummy = {'forecast': [{'date': '2024-01-01', 'temp_max': 28}]}
+assert _extract_forecast_data(dummy, ['date']) == [['2024-01-01']]
+
+# 🐞 Debug
+def debug_extract():
+    test = {'forecast': [{'date': '2025-01-01', 'temp_max': 32, 'temp_min': 18}]}
+    print(_extract_forecast_data(test, ['date', 'temp_max', 'temp_min']))
+
+debug_extract()
+Great! Let’s continue with the next set of functions, using the same enhanced structure:
+
+4. 📘 get_weather_data(location: str, days: int = 7) -> Dict[str, Any]
+def get_weather_data(location: str, days: int = 7) -> Dict[str, Any]:
+    """
+    Fetch and organize weather data for a given location.
+
+    Args:
+        location (str): Location to retrieve weather data for.
+        days (int): Number of days of forecast (default: 7).
+
+    Returns:
+        dict: Contains location, current weather, and daily forecast.
+
+    >>> data = get_weather_data("Rome", 1)
+    >>> "location" in data and "current" in data
+    True
+    """
+    lat, lon = geocode_location(location)
+    today = datetime.date.today()
+    end = today + datetime.timedelta(days=days)
+    raw = fetch_weather(lat, lon, today.isoformat(), end.isoformat())
+    return {
+        "location": location,
+        "current": raw.get("current_weather", {}),
+        "forecast": [
+            {
+                "date": date,
+                "temp_max": tmax,
+                "temp_min": tmin,
+                "precipitation": rain
+            }
+            for date, tmax, tmin, rain in zip(
+                raw["daily"]["time"],
+                raw["daily"]["temperature_2m_max"],
+                raw["daily"]["temperature_2m_min"],
+                raw["daily"]["precipitation_sum"]
+            )
+        ]
+    }
+✅ unittest + assert + 🐞 debug():
+
+class TestWeatherData(unittest.TestCase):
+    def test_structure_keys(self):
+        data = get_weather_data("Madrid", 1)
+        self.assertIn("location", data)
+        self.assertIn("current", data)
+        self.assertTrue(len(data["forecast"]) >= 1)
+
+unittest.TextTestRunner().run(unittest.TestLoader().loadTestsFromTestCase(TestWeatherData))
+
+# ✅ Assertion
+data = get_weather_data("Lisbon", 1)
+assert "forecast" in data and isinstance(data["forecast"], list)
+
+# 🐞 Debug
+def debug_weather_data():
+    print("Debug: Getting weather data for Sydney")
+    result = get_weather_data("Sydney", 2)
+    print(result)
+
+debug_weather_data()
+5. 📘 create_temperature_visualisation(data: Dict[str, Any]) -> go.Figure
+def create_temperature_visualisation(data: Dict[str, Any]) -> go.Figure:
+    """
+    Create a line chart for temperature forecast.
+
+    Args:
+        data (dict): Weather data with daily forecast.
+
+    Returns:
+        plotly.graph_objects.Figure: Line chart figure.
+    """
+    forecast = data.get("forecast", [])
+    dates = [d["date"] for d in forecast]
+    temp_max = [d["temp_max"] for d in forecast]
+    temp_min = [d["temp_min"] for d in forecast]
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=dates, y=temp_max, mode='lines+markers', name='Max Temp'))
+    fig.add_trace(go.Scatter(x=dates, y=temp_min, mode='lines+markers', name='Min Temp'))
+    fig.update_layout(
+        title=f"Temperature Forecast for {data.get('location', '')}",
+        xaxis_title="Date",
+        yaxis_title="Temperature (°C)"
+    )
+    return fig
+✅ unittest + assert + 🐞 debug():
+
+class TestTemperatureViz(unittest.TestCase):
+    def test_fig_output(self):
+        mock_data = {
+            "location": "Testville",
+            "forecast": [
+                {"date": "2024-01-01", "temp_max": 25, "temp_min": 15},
+                {"date": "2024-01-02", "temp_max": 26, "temp_min": 14}
+            ]
+        }
+        fig = create_temperature_visualisation(mock_data)
+        self.assertIsInstance(fig, go.Figure)
+
+unittest.TextTestRunner().run(unittest.TestLoader().loadTestsFromTestCase(TestTemperatureViz))
+
+# ✅ Assertion
+mock = {
+    "location": "FakeCity",
+    "forecast": [{"date": "2024-01-01", "temp_max": 20, "temp_min": 10}]
+}
+fig = create_temperature_visualisation(mock)
+assert isinstance(fig, go.Figure)
+
+# 🐞 Debug
+def debug_temp_viz():
+    mock = {
+        "location": "DebugCity",
+        "forecast": [{"date": "2024-01-01", "temp_max": 30, "temp_min": 20}]
+    }
+    fig = create_temperature_visualisation(mock)
+    fig.show()
+
+debug_temp_viz()
+6. 📘 create_precipitation_visualisation(data: Dict[str, Any]) -> go.Figure
+def create_precipitation_visualisation(data: Dict[str, Any]) -> go.Figure:
+    """
+    Create a bar chart for precipitation forecast.
+
+    Args:
+        data (dict): Weather data with daily forecast.
+
+    Returns:
+        plotly.graph_objects.Figure: Bar chart figure.
+    """
+    forecast = data.get("forecast", [])
+    dates = [d["date"] for d in forecast]
+    rain = [d["precipitation"] for d in forecast]
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(x=dates, y=rain, name='Precipitation'))
+    fig.update_layout(
+        title=f"Precipitation Forecast for {data.get('location', '')}",
+        xaxis_title="Date",
+        yaxis_title="Precipitation (mm)"
+    )
+    return fig
+✅ unittest + assert + 🐞 debug():
+
+class TestPrecipitationViz(unittest.TestCase):
+    def test_fig_output(self):
+        mock = {
+            "location": "Rainville",
+            "forecast": [
+                {"date": "2024-01-01", "precipitation": 5},
+                {"date": "2024-01-02", "precipitation": 10}
+            ]
+        }
+        fig = create_precipitation_visualisation(mock)
+        self.assertIsInstance(fig, go.Figure)
+
+unittest.TextTestRunner().run(unittest.TestLoader().loadTestsFromTestCase(TestPrecipitationViz))
+
+# ✅ Assertion
+mock = {
+    "location": "Drytown",
+    "forecast": [{"date": "2024-01-01", "precipitation": 0}]
+}
+assert isinstance(create_precipitation_visualisation(mock), go.Figure)
+
+# 🐞 Debug
+def debug_precip_viz():
+    mock = {
+        "location": "StormCity",
+        "forecast": [{"date": "2024-01-01", "precipitation": 15}]
+    }
+    fig = create_precipitation_visualisation(mock)
+    fig.show()
+
+debug_precip_viz()
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
