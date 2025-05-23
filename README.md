@@ -47,7 +47,7 @@ Once the code is executed:
 
 **Step 1**: **Ask a Weather Question*
    
-In the “Ask” box, type: **Will it rain in Sydney tomorrow?**
+In the “Ask” box, type: **Will it rain in Sydney/Berlin/Paris tomorrow?**
 
 Click the “Ask Weather” button.
 
@@ -55,7 +55,7 @@ The assistant will parse the question using the AI chat parser and respond with 
 
 **Step 2**: View Temperature Graph*
    
-In the “Location” box, type: **Sydney**
+In the “Location” box, type: **Sydney/Berlin/Paris**
 
 Click the “Show Temperature” button.
 
